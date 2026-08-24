@@ -8,9 +8,10 @@ interface Props {
   quiz: Quiz
   onSolved: () => void
   onClose: () => void
+  onIncorrect?: () => void
 }
 
-export default function QuizModal({ quiz, onSolved, onClose }: Props) {
+export default function QuizModal({ quiz, onSolved, onClose, onIncorrect }: Props) {
   const soundEnabled = useGameStore((s) => s.soundEnabled)
   const [selected, setSelected] = useState<number | null>(null)
   const [submitted, setSubmitted] = useState(false)
@@ -73,6 +74,10 @@ export default function QuizModal({ quiz, onSolved, onClose }: Props) {
           {isCorrect ? (
             <button type="button" className="btn btn-primary" onClick={handleContinue}>
               Continue
+            </button>
+          ) : onIncorrect ? (
+            <button type="button" className="btn btn-danger" onClick={onIncorrect}>
+              Brace yourself
             </button>
           ) : (
             <button

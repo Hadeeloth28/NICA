@@ -4,11 +4,36 @@ import type { LocationId } from '../data/locations'
 import { LOCATIONS } from '../data/locations'
 import { MISSIONS, getMission } from '../data/missions'
 import { levelForXp } from '../data/catalog'
-import { playLevelUp, playMissionComplete, playTreasure } from '../lib/sound'
+import {
+  playLevelUp,
+  playMissionComplete,
+  playTreasure,
+  playDoorLock,
+  playDoorUnlock,
+  playRoomFail,
+  startBreathing,
+  stopBreathing,
+  setBreathingIntensity,
+} from '../lib/sound'
 
 export interface ToastMessage {
   id: number
   text: string
+}
+
+export type RoomPhase = 'stations' | 'combat' | 'success' | 'failed'
+
+export interface RoomSession {
+  missionId: string
+  stationIds: string[]
+  solvedStationIds: string[]
+  attemptsLeft: number
+  maxAttempts: number
+  timeLeftSec: number
+  timeLimitSec: number
+  phase: RoomPhase
+  activeStationId: string | null
+  enemyName: string
 }
 
 interface GameState {
@@ -29,6 +54,7 @@ interface GameState {
   soundEnabled: boolean
   dayStreak: number
   lastVisitDate: string | null
+  roomSession: RoomSession | null
 
   level: () => number
   isLocationUnlocked: (id: LocationId) => boolean
@@ -44,6 +70,12 @@ interface GameState {
   clearWalkTarget: () => void
   toggleSound: () => void
   checkInDaily: () => void
+
+  enterRoom: (missionId: string) => void
+  answerRoomStation: (stationId: string, correct: boolean) => void
+  resolveCombatVictory: () => void
+  finishRoomSuccess: () => void
+  finishRoomFail: () => void
 }
 
 function dateKey(d: Date): string {
@@ -51,6 +83,7 @@ function dateKey(d: Date): string {
 }
 
 let toastCounter = 0
+let roomIntervalId: ReturnType<typeof setInterval> | undefined
 
 export const useGameStore = create<GameState>()(
   persist(
@@ -72,6 +105,7 @@ export const useGameStore = create<GameState>()(
       soundEnabled: true,
       dayStreak: 0,
       lastVisitDate: null,
+      roomSession: null,
 
       level: () => levelForXp(get().xp),
 
@@ -166,11 +200,92 @@ export const useGameStore = create<GameState>()(
           set({ dayStreak: 1, lastVisitDate: today })
         }
       },
+
+      enterRoom: (missionId) => {
+        const mission = getMission(missionId)
+        if (!mission?.room) return
+        window.clearInterval(roomIntervalId)
+        const done = get().completedObjectives[missionId] ?? []
+        const stationIds = mission.room.stations.map((s) => s.id)
+        set({
+          roomSession: {
+            missionId,
+            stationIds,
+            solvedStationIds: stationIds.filter((id) => done.includes(id)),
+            attemptsLeft: mission.room.maxAttempts,
+            maxAttempts: mission.room.maxAttempts,
+            timeLeftSec: mission.room.timeLimitSec,
+            timeLimitSec: mission.room.timeLimitSec,
+            phase: 'stations',
+            activeStationId: null,
+            enemyName: mission.room.enemyName,
+          },
+        })
+        if (get().soundEnabled) {
+          playDoorLock()
+          startBreathing()
+        }
+        roomIntervalId = window.setInterval(() => {
+          const session = get().roomSession
+          if (!session || session.phase === 'success' || session.phase === 'failed') return
+          const timeLeftSec = session.timeLeftSec - 1
+          if (get().soundEnabled) setBreathingIntensity(timeLeftSec <= 60 ? 1 : session.phase === 'combat' ? 0.7 : 0.35)
+          if (timeLeftSec <= 0) {
+            failRoom(set, get)
+            return
+          }
+          set({ roomSession: { ...session, timeLeftSec } })
+        }, 1000)
+      },
+
+      answerRoomStation: (stationId, correct) => {
+        const session = get().roomSession
+        if (!session) return
+        if (correct) {
+          const solvedStationIds = session.solvedStationIds.includes(stationId)
+            ? session.solvedStationIds
+            : [...session.solvedStationIds, stationId]
+          get().completeObjective(session.missionId, stationId)
+          if (solvedStationIds.length >= session.stationIds.length) {
+            succeedRoom(set, get)
+          } else {
+            set({ roomSession: { ...get().roomSession!, solvedStationIds } })
+          }
+        } else {
+          const attemptsLeft = session.attemptsLeft - 1
+          set({
+            roomSession: { ...session, attemptsLeft, phase: 'combat', activeStationId: stationId },
+          })
+        }
+      },
+
+      resolveCombatVictory: () => {
+        const session = get().roomSession
+        if (!session) return
+        if (session.attemptsLeft <= 0) {
+          failRoom(set, get)
+        } else {
+          set({ roomSession: { ...session, phase: 'stations', activeStationId: null } })
+        }
+      },
+
+      finishRoomSuccess: () => {
+        if (get().soundEnabled) {
+          stopBreathing()
+          playDoorUnlock()
+        }
+        set({ roomSession: null })
+      },
+
+      finishRoomFail: () => {
+        if (get().soundEnabled) stopBreathing()
+        set({ roomSession: null })
+      },
     }),
     {
       name: 'levanta-save',
       partialize: (s) => {
-        const { toasts: _toasts, walkTarget: _walkTarget, ...rest } = s
+        const { toasts: _toasts, walkTarget: _walkTarget, roomSession: _roomSession, ...rest } = s
         return rest
       },
     },
@@ -208,6 +323,27 @@ function completeMission(
   const next = MISSIONS.find((m) => m.requiresMissionId === missionId)
   set({ activeMissionId: next?.id })
   checkLevelBadges(set, get)
+}
+
+function failRoom(
+  set: (partial: Partial<GameState> | ((s: GameState) => Partial<GameState>)) => void,
+  get: () => GameState,
+) {
+  window.clearInterval(roomIntervalId)
+  const session = get().roomSession
+  if (!session) return
+  set({ roomSession: { ...session, phase: 'failed' } })
+  if (get().soundEnabled) playRoomFail()
+}
+
+function succeedRoom(
+  set: (partial: Partial<GameState> | ((s: GameState) => Partial<GameState>)) => void,
+  get: () => GameState,
+) {
+  window.clearInterval(roomIntervalId)
+  const session = get().roomSession
+  if (!session) return
+  set({ roomSession: { ...session, phase: 'success' } })
 }
 
 function checkLevelBadges(

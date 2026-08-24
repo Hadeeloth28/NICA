@@ -14,10 +14,12 @@ import AchievementsPanel from './components/panels/AchievementsPanel'
 import LeaderboardPanel from './components/panels/LeaderboardPanel'
 import CalendarPanel from './components/panels/CalendarPanel'
 import MessagesPanel from './components/panels/MessagesPanel'
+import RoomScene from './components/RoomScene'
 
 function App() {
   const soundEnabled = useGameStore((s) => s.soundEnabled)
   const checkInDaily = useGameStore((s) => s.checkInDaily)
+  const roomSession = useGameStore((s) => s.roomSession)
   const [openPanel, setOpenPanel] = useState<PanelKind | null>(null)
 
   useEffect(() => {
@@ -56,6 +58,8 @@ function App() {
       {openPanel === 'leaderboard' && <LeaderboardPanel onClose={() => setOpenPanel(null)} />}
       {openPanel === 'calendar' && <CalendarPanel onClose={() => setOpenPanel(null)} />}
       {openPanel === 'messages' && <MessagesPanel onClose={() => setOpenPanel(null)} />}
+
+      {roomSession && <RoomScene />}
     </div>
   )
 }

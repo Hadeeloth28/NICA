@@ -22,10 +22,13 @@ export default function SophiaPanel() {
     if (done.length === 0) {
       message = mission.briefing
     } else if (next) {
-      message =
-        next.type === 'walk'
-          ? `Good progress. Head to the ${LOCATIONS[next.locationId!].name} next.`
-          : `Nice work so far. Ready for the next challenge: "${next.label}".`
+      if (next.type === 'walk') {
+        message = `Good progress. Head to the ${LOCATIONS[next.locationId!].name} next.`
+      } else if (mission.room) {
+        message = `You're at the door. Step inside when you're ready — it locks behind you until the room is clear.`
+      } else {
+        message = `Nice work so far. Ready for the next challenge: "${next.label}".`
+      }
     } else {
       message = `Mission complete! ${mission.completeText}`
     }

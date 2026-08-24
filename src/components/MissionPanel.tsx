@@ -10,6 +10,7 @@ export default function MissionPanel() {
   const completedObjectives = useGameStore((s) => s.completedObjectives)
   const completeObjective = useGameStore((s) => s.completeObjective)
   const requestWalk = useGameStore((s) => s.requestWalk)
+  const enterRoom = useGameStore((s) => s.enterRoom)
   const completedMissions = useGameStore((s) => s.completedMissions)
 
   const [openQuizId, setOpenQuizId] = useState<string | null>(null)
@@ -31,13 +32,17 @@ export default function MissionPanel() {
 
   const done = completedObjectives[mission.id] ?? []
   const nextObjective = mission.objectives.find((o) => !done.includes(o.id))
+  const missionId = mission.id
+  const missionRoom = mission.room
 
   function handleAction() {
     if (!nextObjective) return
-    if (nextObjective.type === 'quiz' && nextObjective.quizId) {
-      setOpenQuizId(nextObjective.quizId)
-    } else if (nextObjective.type === 'walk' && nextObjective.locationId) {
+    if (nextObjective.type === 'walk' && nextObjective.locationId) {
       requestWalk(nextObjective.locationId)
+    } else if (missionRoom) {
+      enterRoom(missionId)
+    } else if (nextObjective.type === 'quiz' && nextObjective.quizId) {
+      setOpenQuizId(nextObjective.quizId)
     }
   }
 
@@ -66,7 +71,9 @@ export default function MissionPanel() {
         <button type="button" className="btn btn-primary btn-block" onClick={handleAction}>
           {nextObjective.type === 'walk'
             ? `Walk to ${LOCATIONS[nextObjective.locationId!].name}`
-            : 'Start Challenge'}
+            : mission.room
+              ? `Enter ${LOCATIONS[mission.targetLocationId].name}`
+              : 'Start Challenge'}
         </button>
       )}
 
