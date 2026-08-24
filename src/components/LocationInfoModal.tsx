@@ -31,6 +31,9 @@ export default function LocationInfoModal({
       {locationId === 'security' && (
         <p className="modal-note">Central command. New missions will appear here as they unlock.</p>
       )}
+      {locationId === 'lab' && (
+        <p className="modal-note">High-clearance wing. Only accessible once Sophia grants you access.</p>
+      )}
     </Modal>
   )
 }

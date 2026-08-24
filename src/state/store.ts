@@ -4,6 +4,7 @@ import type { LocationId } from '../data/locations'
 import { LOCATIONS } from '../data/locations'
 import { MISSIONS, getMission } from '../data/missions'
 import { levelForXp } from '../data/catalog'
+import { playLevelUp, playMissionComplete, playTreasure } from '../lib/sound'
 
 export interface ToastMessage {
   id: number
@@ -25,6 +26,9 @@ interface GameState {
   readMessageIds: string[]
   toasts: ToastMessage[]
   walkTarget: LocationId | null
+  soundEnabled: boolean
+  dayStreak: number
+  lastVisitDate: string | null
 
   level: () => number
   isLocationUnlocked: (id: LocationId) => boolean
@@ -38,6 +42,12 @@ interface GameState {
   dismissToast: (id: number) => void
   requestWalk: (id: LocationId) => void
   clearWalkTarget: () => void
+  toggleSound: () => void
+  checkInDaily: () => void
+}
+
+function dateKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 let toastCounter = 0
@@ -59,6 +69,9 @@ export const useGameStore = create<GameState>()(
       readMessageIds: [],
       toasts: [],
       walkTarget: null,
+      soundEnabled: true,
+      dayStreak: 0,
+      lastVisitDate: null,
 
       level: () => levelForXp(get().xp),
 
@@ -128,6 +141,7 @@ export const useGameStore = create<GameState>()(
           badges: s.badges.includes('treasure-hunter') ? s.badges : [...s.badges, 'treasure-hunter'],
         }))
         get().pushToast('Secret Grotto reward found: +100 XP, +75 coins, Grotto Gem!')
+        if (get().soundEnabled) playTreasure()
         checkLevelBadges(set, get)
       },
 
@@ -136,9 +150,25 @@ export const useGameStore = create<GameState>()(
 
       requestWalk: (id) => set({ walkTarget: id }),
       clearWalkTarget: () => set({ walkTarget: null }),
+      toggleSound: () => set((s) => ({ soundEnabled: !s.soundEnabled })),
+
+      checkInDaily: () => {
+        const today = dateKey(new Date())
+        const last = get().lastVisitDate
+        if (last === today) return
+        if (last) {
+          const yesterday = dateKey(new Date(Date.now() - 86400000))
+          set((s) => ({
+            dayStreak: last === yesterday ? s.dayStreak + 1 : 1,
+            lastVisitDate: today,
+          }))
+        } else {
+          set({ dayStreak: 1, lastVisitDate: today })
+        }
+      },
     }),
     {
-      name: 'nica-save',
+      name: 'levanta-save',
       partialize: (s) => {
         const { toasts: _toasts, walkTarget: _walkTarget, ...rest } = s
         return rest
@@ -154,6 +184,7 @@ function completeMission(
 ) {
   const mission = getMission(missionId)
   if (!mission) return
+  const prevLevel = get().level()
   set((s) => ({
     completedMissions: [...s.completedMissions, missionId],
     xp: s.xp + mission.rewardXp,
@@ -169,6 +200,10 @@ function completeMission(
   }))
 
   get().pushToast(`Mission complete: ${mission.title}! +${mission.rewardXp} XP, +${mission.rewardCoins} coins`)
+  if (get().soundEnabled) {
+    playMissionComplete()
+    if (get().level() > prevLevel) setTimeout(() => get().soundEnabled && playLevelUp(), 350)
+  }
 
   const next = MISSIONS.find((m) => m.requiresMissionId === missionId)
   set({ activeMissionId: next?.id })

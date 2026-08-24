@@ -3,10 +3,22 @@ import { useGameStore } from '../state/store'
 import { EDGES, LOCATIONS, findPath, type LocationId } from '../data/locations'
 import { getMission } from '../data/missions'
 import { levelForXp } from '../data/catalog'
+import { playFootstep, playLocked } from '../lib/sound'
 import LocationNode from './LocationNode'
 import LocationInfoModal from './LocationInfoModal'
 
-const INFO_LOCATIONS: LocationId[] = ['cisco', 'security', 'grotto', 'cafe']
+const INFO_LOCATIONS: LocationId[] = ['cisco', 'security', 'grotto', 'cafe', 'lab']
+
+const FOLIAGE: { x: number; y: number; icon: string; size: number; delay: number }[] = [
+  { x: 6, y: 30, icon: '\u{1F334}', size: 2.4, delay: 0 },
+  { x: 4, y: 68, icon: '\u{1F33F}', size: 1.6, delay: 0.6 },
+  { x: 34, y: 5, icon: '\u{1F334}', size: 2, delay: 1.1 },
+  { x: 60, y: 6, icon: '\u{1F33F}', size: 1.4, delay: 0.3 },
+  { x: 95, y: 34, icon: '\u{1F334}', size: 2.2, delay: 0.9 },
+  { x: 40, y: 92, icon: '\u{1F33F}', size: 1.6, delay: 1.4 },
+  { x: 65, y: 90, icon: '\u{1F334}', size: 2, delay: 0.4 },
+  { x: 24, y: 45, icon: '\u{1F33F}', size: 1.3, delay: 1.7 },
+]
 
 export default function WorldMap() {
   const currentLocationId = useGameStore((s) => s.currentLocationId)
@@ -17,6 +29,7 @@ export default function WorldMap() {
   const pushToast = useGameStore((s) => s.pushToast)
   const walkTarget = useGameStore((s) => s.walkTarget)
   const clearWalkTarget = useGameStore((s) => s.clearWalkTarget)
+  const soundEnabled = useGameStore((s) => s.soundEnabled)
 
   const level = levelForXp(xp)
   const isLocationUnlocked = (id: LocationId) =>
@@ -38,14 +51,17 @@ export default function WorldMap() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [walkTarget])
 
+  const isMissionTarget = (id: LocationId) => mission?.targetLocationId === id
+
   function handleNodeClick(id: LocationId) {
     if (walking) return
     if (id === currentLocationId) {
-      if (INFO_LOCATIONS.includes(id)) setInfoLocation(id)
+      if (INFO_LOCATIONS.includes(id) && !isMissionTarget(id)) setInfoLocation(id)
       return
     }
     if (!isLocationUnlocked(id)) {
       pushToast(`${LOCATIONS[id].name} requires Level ${LOCATIONS[id].lockLevel}`)
+      if (soundEnabled) playLocked()
       return
     }
     const path = findPath(currentLocationId, id)
@@ -59,11 +75,12 @@ export default function WorldMap() {
       if (i >= path.length) {
         setWalking(false)
         const finalId = path[path.length - 1]
-        if (INFO_LOCATIONS.includes(finalId)) setInfoLocation(finalId)
+        if (INFO_LOCATIONS.includes(finalId) && !isMissionTarget(finalId)) setInfoLocation(finalId)
         return
       }
       const nodeId = path[i]
       setDisplayPos(LOCATIONS[nodeId])
+      if (soundEnabled) playFootstep()
       const duration = 750
       timeoutRef.current = window.setTimeout(() => {
         arriveAt(nodeId)
@@ -77,6 +94,16 @@ export default function WorldMap() {
   return (
     <div className="world-map">
       <div className="map-foliage" aria-hidden="true" />
+      {FOLIAGE.map((f, i) => (
+        <div
+          key={i}
+          className="foliage-deco"
+          style={{ left: `${f.x}%`, top: `${f.y}%`, fontSize: `${f.size}rem`, animationDelay: `${f.delay}s` }}
+          aria-hidden="true"
+        >
+          {f.icon}
+        </div>
+      ))}
       <svg className="path-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
         {EDGES.map(([a, b]) => (
           <line
@@ -108,7 +135,7 @@ export default function WorldMap() {
         style={{ left: `${displayPos.x}%`, top: `${displayPos.y}%` }}
       >
         <div className="avatar-figure">{'\u{1F9D1}\u{200D}\u{1F4BB}'}</div>
-        <div className="avatar-tag">YOU</div>
+        <div className="avatar-tag">YOU &middot; Lvl {level}</div>
       </div>
 
       {infoLocation && (

@@ -70,6 +70,26 @@ export const MISSIONS: Mission[] = [
     rewardCoins: 60,
     rewardBadgeId: 'threat-hunter',
     rewardItemId: 'access-badge',
+    unlocksLocationId: 'lab',
+  },
+  {
+    id: 'threat-lab-response',
+    title: 'Threat Lab: Ransomware Outbreak',
+    giver: 'Sophia AI',
+    briefing:
+      "Your clearance just got you into the Threat Lab. We've isolated a live ransomware sample — I need you to classify it, get to the lab, and contain the outbreak before it spreads further.",
+    completeText: 'Outbreak contained. The Threat Lab is now fully staffed under your watch.',
+    targetLocationId: 'lab',
+    requiresMissionId: 'security-sweep',
+    objectives: [
+      { id: 'classify-malware', label: 'Classify the malware sample', type: 'quiz', quizId: 'classify-malware' },
+      { id: 'reach-lab', label: 'Reach the Threat Lab', type: 'walk', locationId: 'lab' },
+      { id: 'contain-incident', label: 'Contain the outbreak', type: 'quiz', quizId: 'contain-incident' },
+    ],
+    rewardXp: 500,
+    rewardCoins: 80,
+    rewardBadgeId: 'incident-commander',
+    rewardItemId: 'lab-clearance',
   },
 ]
 

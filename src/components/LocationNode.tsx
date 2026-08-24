@@ -1,4 +1,5 @@
 import type { LocationNode as LocationNodeData } from '../data/locations'
+import BuildingIcon from './BuildingIcon'
 
 interface Props {
   loc: LocationNodeData
@@ -14,6 +15,7 @@ export default function LocationNode({ loc, unlocked, isCurrent, isMissionTarget
       type="button"
       className={[
         'location-node',
+        `theme-${loc.theme}`,
         unlocked ? 'unlocked' : 'locked',
         isCurrent ? 'current' : '',
         isMissionTarget ? 'mission-target' : '',
@@ -24,7 +26,9 @@ export default function LocationNode({ loc, unlocked, isCurrent, isMissionTarget
       onClick={onClick}
     >
       {isMissionTarget && <span className="mission-flag">!</span>}
-      <div className="location-icon">{unlocked ? loc.icon : '\u{1F512}'}</div>
+      <div className="location-icon">
+        {unlocked ? <BuildingIcon id={loc.id} /> : '\u{1F512}'}
+      </div>
       <div className="location-label">
         <div className="location-name">{loc.name}</div>
         <div className="location-subtitle">{unlocked ? loc.subtitle : `Level ${loc.lockLevel}`}</div>

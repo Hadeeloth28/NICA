@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './game.css'
+import { useGameStore } from './state/store'
+import { playOpenPanel } from './lib/sound'
 import TopBar from './components/TopBar'
 import WorldMap from './components/WorldMap'
 import SophiaPanel from './components/SophiaPanel'
 import MissionPanel from './components/MissionPanel'
+import Sidebar from './components/Sidebar'
 import BottomNav, { type PanelKind } from './components/BottomNav'
 import ToastStack from './components/ToastStack'
 import InventoryPanel from './components/panels/InventoryPanel'
@@ -13,22 +16,39 @@ import CalendarPanel from './components/panels/CalendarPanel'
 import MessagesPanel from './components/panels/MessagesPanel'
 
 function App() {
+  const soundEnabled = useGameStore((s) => s.soundEnabled)
+  const checkInDaily = useGameStore((s) => s.checkInDaily)
   const [openPanel, setOpenPanel] = useState<PanelKind | null>(null)
+
+  useEffect(() => {
+    checkInDaily()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function handleOpenPanel(panel: PanelKind) {
+    setOpenPanel((current) => (current === panel ? null : panel))
+    if (soundEnabled) playOpenPanel()
+  }
 
   return (
     <div className="game-root">
-      <TopBar />
+      <Sidebar activePanel={openPanel} onOpen={handleOpenPanel} onHome={() => setOpenPanel(null)} />
 
-      <div className="game-body">
-        <WorldMap />
+      <div className="game-main">
+        <TopBar />
 
-        <aside className="side-column">
-          <SophiaPanel />
-          <MissionPanel />
-        </aside>
+        <div className="game-body">
+          <WorldMap />
+
+          <aside className="side-column">
+            <SophiaPanel />
+            <MissionPanel />
+          </aside>
+        </div>
+
+        <BottomNav onOpen={handleOpenPanel} />
       </div>
 
-      <BottomNav onOpen={setOpenPanel} />
       <ToastStack />
 
       {openPanel === 'inventory' && <InventoryPanel onClose={() => setOpenPanel(null)} />}

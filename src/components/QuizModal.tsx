@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import type { Quiz } from '../data/quizzes'
+import { useGameStore } from '../state/store'
+import { playClick, playCorrect, playIncorrect } from '../lib/sound'
 import Modal from './Modal'
 
 interface Props {
@@ -9,6 +11,7 @@ interface Props {
 }
 
 export default function QuizModal({ quiz, onSolved, onClose }: Props) {
+  const soundEnabled = useGameStore((s) => s.soundEnabled)
   const [selected, setSelected] = useState<number | null>(null)
   const [submitted, setSubmitted] = useState(false)
 
@@ -17,6 +20,7 @@ export default function QuizModal({ quiz, onSolved, onClose }: Props) {
   function handleSubmit() {
     if (selected === null) return
     setSubmitted(true)
+    if (soundEnabled) (selected === quiz.correctIndex ? playCorrect : playIncorrect)()
   }
 
   function handleContinue() {
@@ -43,7 +47,10 @@ export default function QuizModal({ quiz, onSolved, onClose }: Props) {
               type="button"
               className={`quiz-option ${state}`}
               disabled={submitted}
-              onClick={() => setSelected(i)}
+              onClick={() => {
+                setSelected(i)
+                if (soundEnabled) playClick()
+              }}
             >
               {option}
             </button>

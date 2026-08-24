@@ -1,43 +1,52 @@
 import { useGameStore } from '../state/store'
-import { xpForLevel } from '../data/catalog'
 
 export default function TopBar() {
   const xp = useGameStore((s) => s.xp)
   const level = useGameStore((s) => s.level())
   const coins = useGameStore((s) => s.coins)
   const badges = useGameStore((s) => s.badges)
-
-  const currentLevelXp = xpForLevel(level)
-  const nextLevelXp = xpForLevel(level + 1)
-  const progress = Math.min(
-    100,
-    Math.round(((xp - currentLevelXp) / (nextLevelXp - currentLevelXp)) * 100),
-  )
+  const dayStreak = useGameStore((s) => s.dayStreak)
+  const soundEnabled = useGameStore((s) => s.soundEnabled)
+  const toggleSound = useGameStore((s) => s.toggleSound)
 
   return (
     <div className="top-bar">
       <div className="brand">
-        <span className="brand-mark">{'\u{1F6E1}️'}</span>
-        <span className="brand-name">NICA</span>
+        <div className="brand-plaque">
+          <span className="brand-name">LEVANTA</span>
+          <span className="brand-tagline">Learn &middot; Play &middot; Build &middot; Rise</span>
+        </div>
+        <span className="brand-level" title="Your level">
+          Lvl {level}
+        </span>
       </div>
 
-      <div className="level-block">
-        <div className="level-badge">Lvl {level}</div>
-        <div className="xp-bar">
-          <div className="xp-bar-fill" style={{ width: `${progress}%` }} />
+      <div className="hud-stats">
+        <div className="stat-pill" title="Day streak">
+          <span>{'\u{1F525}'}</span>
+          {dayStreak}
         </div>
-        <div className="xp-label">
-          {xp} XP <span className="xp-label-dim">/ {nextLevelXp} next</span>
+        <div className="stat-pill" title="Total XP">
+          <span>⭐</span>
+          {xp}
         </div>
-      </div>
-
-      <div className="stat-pill" title="Badges earned">
-        <span>{'\u{1F396}️'}</span>
-        {badges.length}
-      </div>
-      <div className="stat-pill" title="Coins">
-        <span>{'\u{1FA99}'}</span>
-        {coins}
+        <div className="stat-pill" title="Badges earned">
+          <span>{'\u{1F3C6}'}</span>
+          {badges.length}
+        </div>
+        <div className="stat-pill" title="Gems">
+          <span>{'\u{1F48E}'}</span>
+          {coins}
+        </div>
+        <button
+          type="button"
+          className="sound-toggle"
+          onClick={toggleSound}
+          title={soundEnabled ? 'Mute sound' : 'Unmute sound'}
+          aria-label={soundEnabled ? 'Mute sound' : 'Unmute sound'}
+        >
+          {soundEnabled ? '\u{1F50A}' : '\u{1F507}'}
+        </button>
       </div>
     </div>
   )

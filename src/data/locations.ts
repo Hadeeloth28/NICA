@@ -5,6 +5,9 @@ export type LocationId =
   | 'firewall'
   | 'security'
   | 'grotto'
+  | 'lab'
+
+export type LocationTheme = 'amber' | 'blue' | 'red' | 'purple' | 'pink' | 'teal'
 
 export interface LocationNode {
   id: LocationId
@@ -16,6 +19,7 @@ export interface LocationNode {
   lockLevel: number // 0 = never level-locked
   secret?: boolean
   description: string
+  theme: LocationTheme
 }
 
 export const LOCATIONS: Record<LocationId, LocationNode> = {
@@ -27,7 +31,8 @@ export const LOCATIONS: Record<LocationId, LocationNode> = {
     y: 76,
     icon: '\u{1F4CD}',
     lockLevel: 0,
-    description: 'Where every recruit begins their journey through NICA.',
+    description: 'Where every recruit begins their journey through Levanta.',
+    theme: 'teal',
   },
   cafe: {
     id: 'cafe',
@@ -38,6 +43,7 @@ export const LOCATIONS: Record<LocationId, LocationNode> = {
     icon: '☕',
     lockLevel: 0,
     description: 'The social hub of the academy. Grab a coffee and catch up with Sophia AI.',
+    theme: 'amber',
   },
   cisco: {
     id: 'cisco',
@@ -48,6 +54,7 @@ export const LOCATIONS: Record<LocationId, LocationNode> = {
     icon: '\u{1F393}',
     lockLevel: 20,
     description: 'Advanced coursework on networking and infrastructure defense.',
+    theme: 'blue',
   },
   firewall: {
     id: 'firewall',
@@ -58,6 +65,7 @@ export const LOCATIONS: Record<LocationId, LocationNode> = {
     icon: '\u{1F525}',
     lockLevel: 0,
     description: 'A fortified vault under active attack. Analysts are needed immediately.',
+    theme: 'red',
   },
   security: {
     id: 'security',
@@ -68,6 +76,7 @@ export const LOCATIONS: Record<LocationId, LocationNode> = {
     icon: '\u{1F6E1}️',
     lockLevel: 30,
     description: 'Central command for monitoring threats across the whole academy network.',
+    theme: 'purple',
   },
   grotto: {
     id: 'grotto',
@@ -79,6 +88,18 @@ export const LOCATIONS: Record<LocationId, LocationNode> = {
     lockLevel: 5,
     secret: true,
     description: 'A hidden alcove rumored to hold rewards for curious explorers.',
+    theme: 'pink',
+  },
+  lab: {
+    id: 'lab',
+    name: 'Threat Lab',
+    subtitle: 'Incident response wing',
+    x: 94,
+    y: 78,
+    icon: '\u{1F9EA}',
+    lockLevel: 40,
+    description: 'A specialized lab for dissecting live malware samples and coordinating incident response.',
+    theme: 'teal',
   },
 }
 
@@ -88,6 +109,7 @@ export const EDGES: [LocationId, LocationId][] = [
   ['cafe', 'firewall'],
   ['start', 'security'],
   ['start', 'grotto'],
+  ['security', 'lab'],
 ]
 
 const adjacency: Record<LocationId, LocationId[]> = Object.keys(LOCATIONS).reduce(

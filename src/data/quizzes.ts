@@ -62,6 +62,29 @@ export const QUIZZES: Record<string, Quiz> = {
     explanation:
       'Rapid repeated login failures from one source are the signature of a brute-force or credential-stuffing attack.',
   },
+  'classify-malware': {
+    id: 'classify-malware',
+    question:
+      'A sample encrypts user files and demands payment to restore access. How would you classify it?',
+    options: ['Ransomware', 'Adware', 'A benign compression tool', 'A firmware update'],
+    correctIndex: 0,
+    explanation:
+      'Malware that encrypts files and demands payment for the decryption key is the defining behavior of ransomware.',
+  },
+  'contain-incident': {
+    id: 'contain-incident',
+    question:
+      'Ransomware is actively spreading across the office network. What is the single most urgent containment step?',
+    options: [
+      'Segment or disconnect the affected systems from the network immediately',
+      'Send a company-wide email asking people to be careful',
+      'Wait until the end of the day to investigate',
+      'Reinstall antivirus on just one machine',
+    ],
+    correctIndex: 0,
+    explanation:
+      'Isolating affected systems stops lateral spread and buys time for a full incident response.',
+  },
   'patch-vuln': {
     id: 'patch-vuln',
     question:

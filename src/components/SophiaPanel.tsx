@@ -15,7 +15,7 @@ export default function SophiaPanel() {
     message =
       completedMissions.length > 0
         ? "Excellent work. You've cleared every mission I have for you right now — keep exploring the map."
-        : 'Welcome to NICA! Explore the map to find your first mission.'
+        : 'Welcome to Levanta! Explore the map to find your first mission.'
   } else {
     const done = completedObjectives[mission.id] ?? []
     const next = mission.objectives.find((o) => !done.includes(o.id))

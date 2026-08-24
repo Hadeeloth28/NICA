@@ -24,6 +24,12 @@ export const BADGES: Record<string, Badge> = {
     description: 'Discovered the rewards hidden in the Secret Grotto.',
     icon: '\u{1F48E}',
   },
+  'incident-commander': {
+    id: 'incident-commander',
+    name: 'Incident Commander',
+    description: 'Contained a live ransomware outbreak at the Threat Lab.',
+    icon: '\u{1F9EA}',
+  },
   'rising-star': {
     id: 'rising-star',
     name: 'Rising Star',
@@ -57,6 +63,12 @@ export const ITEMS: Record<string, Item> = {
     name: 'Access Badge',
     description: 'Grants elevated clearance at the Security Center.',
     icon: '\u{1F4B3}',
+  },
+  'lab-clearance': {
+    id: 'lab-clearance',
+    name: 'Lab Clearance',
+    description: 'Full access credentials for the Threat Lab.',
+    icon: '\u{1F9EB}',
   },
   'grotto-gem': {
     id: 'grotto-gem',
