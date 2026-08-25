@@ -76,6 +76,7 @@ interface GameState {
   resolveCombatVictory: () => void
   finishRoomSuccess: () => void
   finishRoomFail: () => void
+  checkRoomComplete: () => void
 }
 
 function dateKey(d: Date): string {
@@ -245,11 +246,10 @@ export const useGameStore = create<GameState>()(
           const solvedStationIds = session.solvedStationIds.includes(stationId)
             ? session.solvedStationIds
             : [...session.solvedStationIds, stationId]
+          set({ roomSession: { ...session, solvedStationIds } })
           get().completeObjective(session.missionId, stationId)
           if (solvedStationIds.length >= session.stationIds.length) {
             succeedRoom(set, get)
-          } else {
-            set({ roomSession: { ...get().roomSession!, solvedStationIds } })
           }
         } else {
           const attemptsLeft = session.attemptsLeft - 1
@@ -280,6 +280,14 @@ export const useGameStore = create<GameState>()(
       finishRoomFail: () => {
         if (get().soundEnabled) stopBreathing()
         set({ roomSession: null })
+      },
+
+      checkRoomComplete: () => {
+        const session = get().roomSession
+        if (!session || session.phase !== 'stations') return
+        if (session.solvedStationIds.length >= session.stationIds.length) {
+          succeedRoom(set, get)
+        }
       },
     }),
     {

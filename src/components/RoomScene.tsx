@@ -18,6 +18,7 @@ export default function RoomScene() {
   const resolveCombatVictory = useGameStore((s) => s.resolveCombatVictory)
   const finishRoomSuccess = useGameStore((s) => s.finishRoomSuccess)
   const finishRoomFail = useGameStore((s) => s.finishRoomFail)
+  const checkRoomComplete = useGameStore((s) => s.checkRoomComplete)
 
   const [openStationId, setOpenStationId] = useState<string | null>(null)
 
@@ -27,6 +28,13 @@ export default function RoomScene() {
       return () => clearTimeout(t)
     }
   }, [session?.phase, finishRoomSuccess])
+
+  // Safety net: if every station is ever marked solved while still in the
+  // stations phase (should already be handled by answerRoomStation), force
+  // the success transition instead of leaving the player stuck.
+  useEffect(() => {
+    checkRoomComplete()
+  }, [session?.solvedStationIds, session?.phase, checkRoomComplete])
 
   if (!session) return null
 
