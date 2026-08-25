@@ -206,13 +206,12 @@ export const useGameStore = create<GameState>()(
         const mission = getMission(missionId)
         if (!mission?.room) return
         window.clearInterval(roomIntervalId)
-        const done = get().completedObjectives[missionId] ?? []
         const stationIds = mission.room.stations.map((s) => s.id)
         set({
           roomSession: {
             missionId,
             stationIds,
-            solvedStationIds: stationIds.filter((id) => done.includes(id)),
+            solvedStationIds: [],
             attemptsLeft: mission.room.maxAttempts,
             maxAttempts: mission.room.maxAttempts,
             timeLeftSec: mission.room.timeLimitSec,
