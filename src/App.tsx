@@ -1,0 +1,67 @@
+import { useEffect, useState } from 'react'
+import './game.css'
+import { useGameStore } from './state/store'
+import { playOpenPanel } from './lib/sound'
+import TopBar from './components/TopBar'
+import WorldMap from './components/WorldMap'
+import SophiaPanel from './components/SophiaPanel'
+import MissionPanel from './components/MissionPanel'
+import Sidebar from './components/Sidebar'
+import BottomNav, { type PanelKind } from './components/BottomNav'
+import ToastStack from './components/ToastStack'
+import InventoryPanel from './components/panels/InventoryPanel'
+import AchievementsPanel from './components/panels/AchievementsPanel'
+import LeaderboardPanel from './components/panels/LeaderboardPanel'
+import CalendarPanel from './components/panels/CalendarPanel'
+import MessagesPanel from './components/panels/MessagesPanel'
+import RoomScene from './components/RoomScene'
+
+function App() {
+  const soundEnabled = useGameStore((s) => s.soundEnabled)
+  const checkInDaily = useGameStore((s) => s.checkInDaily)
+  const roomSession = useGameStore((s) => s.roomSession)
+  const [openPanel, setOpenPanel] = useState<PanelKind | null>(null)
+
+  useEffect(() => {
+    checkInDaily()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function handleOpenPanel(panel: PanelKind) {
+    setOpenPanel((current) => (current === panel ? null : panel))
+    if (soundEnabled) playOpenPanel()
+  }
+
+  return (
+    <div className="game-root">
+      <Sidebar activePanel={openPanel} onOpen={handleOpenPanel} onHome={() => setOpenPanel(null)} />
+
+      <div className="game-main">
+        <TopBar />
+
+        <div className="game-body">
+          <WorldMap />
+
+          <aside className="side-column">
+            <SophiaPanel />
+            <MissionPanel />
+          </aside>
+        </div>
+
+        <BottomNav onOpen={handleOpenPanel} />
+      </div>
+
+      <ToastStack />
+
+      {openPanel === 'inventory' && <InventoryPanel onClose={() => setOpenPanel(null)} />}
+      {openPanel === 'achievements' && <AchievementsPanel onClose={() => setOpenPanel(null)} />}
+      {openPanel === 'leaderboard' && <LeaderboardPanel onClose={() => setOpenPanel(null)} />}
+      {openPanel === 'calendar' && <CalendarPanel onClose={() => setOpenPanel(null)} />}
+      {openPanel === 'messages' && <MessagesPanel onClose={() => setOpenPanel(null)} />}
+
+      {roomSession && <RoomScene />}
+    </div>
+  )
+}
+
+export default App
