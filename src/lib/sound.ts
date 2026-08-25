@@ -1,28 +1,42 @@
 let ctx: AudioContext | null = null
+let ctxUnavailable = false
 
 function getCtx(): AudioContext | null {
-  if (typeof window === 'undefined') return null
-  const AudioCtor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-  if (!AudioCtor) return null
-  if (!ctx) ctx = new AudioCtor()
-  if (ctx.state === 'suspended') void ctx.resume()
-  return ctx
+  if (typeof window === 'undefined' || ctxUnavailable) return null
+  try {
+    const AudioCtor =
+      window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    if (!AudioCtor) {
+      ctxUnavailable = true
+      return null
+    }
+    if (!ctx) ctx = new AudioCtor()
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {})
+    return ctx
+  } catch {
+    ctxUnavailable = true
+    return null
+  }
 }
 
 function tone(freq: number, startOffset: number, duration: number, type: OscillatorType, peakGain: number) {
-  const c = getCtx()
-  if (!c) return
-  const osc = c.createOscillator()
-  const gain = c.createGain()
-  osc.type = type
-  osc.frequency.value = freq
-  const startAt = c.currentTime + startOffset
-  gain.gain.setValueAtTime(0.0001, startAt)
-  gain.gain.linearRampToValueAtTime(peakGain, startAt + 0.012)
-  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration)
-  osc.connect(gain).connect(c.destination)
-  osc.start(startAt)
-  osc.stop(startAt + duration + 0.03)
+  try {
+    const c = getCtx()
+    if (!c) return
+    const osc = c.createOscillator()
+    const gain = c.createGain()
+    osc.type = type
+    osc.frequency.value = freq
+    const startAt = c.currentTime + startOffset
+    gain.gain.setValueAtTime(0.0001, startAt)
+    gain.gain.linearRampToValueAtTime(peakGain, startAt + 0.012)
+    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration)
+    osc.connect(gain).connect(c.destination)
+    osc.start(startAt)
+    osc.stop(startAt + duration + 0.03)
+  } catch {
+    // audio is a non-critical enhancement; never let it break game logic
+  }
 }
 
 function createNoiseBuffer(c: AudioContext, seconds: number): AudioBuffer {
@@ -41,19 +55,23 @@ function noiseBurst(
   filterFreq: number,
   filterType: BiquadFilterType = 'lowpass',
 ) {
-  const noise = c.createBufferSource()
-  noise.buffer = createNoiseBuffer(c, duration + 0.05)
-  const filter = c.createBiquadFilter()
-  filter.type = filterType
-  filter.frequency.value = filterFreq
-  const gain = c.createGain()
-  const startAt = c.currentTime + startOffset
-  gain.gain.setValueAtTime(0.0001, startAt)
-  gain.gain.linearRampToValueAtTime(peakGain, startAt + 0.008)
-  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration)
-  noise.connect(filter).connect(gain).connect(c.destination)
-  noise.start(startAt)
-  noise.stop(startAt + duration + 0.05)
+  try {
+    const noise = c.createBufferSource()
+    noise.buffer = createNoiseBuffer(c, duration + 0.05)
+    const filter = c.createBiquadFilter()
+    filter.type = filterType
+    filter.frequency.value = filterFreq
+    const gain = c.createGain()
+    const startAt = c.currentTime + startOffset
+    gain.gain.setValueAtTime(0.0001, startAt)
+    gain.gain.linearRampToValueAtTime(peakGain, startAt + 0.008)
+    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration)
+    noise.connect(filter).connect(gain).connect(c.destination)
+    noise.start(startAt)
+    noise.stop(startAt + duration + 0.05)
+  } catch {
+    // audio is a non-critical enhancement; never let it break game logic
+  }
 }
 
 export function playClick() {
@@ -151,54 +169,70 @@ interface BreathingNodes {
 let breathing: BreathingNodes | null = null
 
 export function startBreathing() {
-  const c = getCtx()
-  if (!c || breathing) return
+  try {
+    const c = getCtx()
+    if (!c || breathing) return
 
-  const noiseSource = c.createBufferSource()
-  noiseSource.buffer = createNoiseBuffer(c, 2)
-  noiseSource.loop = true
+    const noiseSource = c.createBufferSource()
+    noiseSource.buffer = createNoiseBuffer(c, 2)
+    noiseSource.loop = true
 
-  const filter = c.createBiquadFilter()
-  filter.type = 'bandpass'
-  filter.frequency.value = 300
-  filter.Q.value = 0.6
+    const filter = c.createBiquadFilter()
+    filter.type = 'bandpass'
+    filter.frequency.value = 300
+    filter.Q.value = 0.6
 
-  const gain = c.createGain()
-  gain.gain.value = 0.0001
+    const gain = c.createGain()
+    gain.gain.value = 0.0001
 
-  const lfo = c.createOscillator()
-  lfo.frequency.value = 0.28
-  const lfoDepth = c.createGain()
-  lfoDepth.gain.value = 150
-  lfo.connect(lfoDepth)
-  lfoDepth.connect(filter.frequency)
+    const lfo = c.createOscillator()
+    lfo.frequency.value = 0.28
+    const lfoDepth = c.createGain()
+    lfoDepth.gain.value = 150
+    lfo.connect(lfoDepth)
+    lfoDepth.connect(filter.frequency)
 
-  noiseSource.connect(filter).connect(gain).connect(c.destination)
+    noiseSource.connect(filter).connect(gain).connect(c.destination)
 
-  noiseSource.start()
-  lfo.start()
-  gain.gain.linearRampToValueAtTime(0.02, c.currentTime + 1.2)
+    noiseSource.start()
+    lfo.start()
+    gain.gain.linearRampToValueAtTime(0.02, c.currentTime + 1.2)
 
-  breathing = { noiseSource, lfo, gain }
+    breathing = { noiseSource, lfo, gain }
+  } catch {
+    breathing = null
+  }
 }
 
 export function setBreathingIntensity(level: number) {
-  const c = getCtx()
-  if (!c || !breathing) return
-  const clamped = Math.max(0, Math.min(1, level))
-  breathing.gain.gain.linearRampToValueAtTime(0.015 + clamped * 0.05, c.currentTime + 0.4)
-  breathing.lfo.frequency.linearRampToValueAtTime(0.22 + clamped * 0.5, c.currentTime + 0.4)
+  try {
+    const c = getCtx()
+    if (!c || !breathing) return
+    const clamped = Math.max(0, Math.min(1, level))
+    breathing.gain.gain.linearRampToValueAtTime(0.015 + clamped * 0.05, c.currentTime + 0.4)
+    breathing.lfo.frequency.linearRampToValueAtTime(0.22 + clamped * 0.5, c.currentTime + 0.4)
+  } catch {
+    // ignore
+  }
 }
 
 export function stopBreathing() {
-  const c = getCtx()
   if (!breathing) return
   const { noiseSource, lfo, gain } = breathing
   breathing = null
-  if (!c) return
-  gain.gain.linearRampToValueAtTime(0.0001, c.currentTime + 0.4)
-  setTimeout(() => {
-    noiseSource.stop()
-    lfo.stop()
-  }, 450)
+  try {
+    const c = getCtx()
+    if (!c) return
+    gain.gain.linearRampToValueAtTime(0.0001, c.currentTime + 0.4)
+    setTimeout(() => {
+      try {
+        noiseSource.stop()
+        lfo.stop()
+      } catch {
+        // ignore
+      }
+    }, 450)
+  } catch {
+    // ignore
+  }
 }

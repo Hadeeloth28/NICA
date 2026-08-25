@@ -30,6 +30,8 @@ export default function WorldMap() {
   const walkTarget = useGameStore((s) => s.walkTarget)
   const clearWalkTarget = useGameStore((s) => s.clearWalkTarget)
   const soundEnabled = useGameStore((s) => s.soundEnabled)
+  const enterRoom = useGameStore((s) => s.enterRoom)
+  const roomSession = useGameStore((s) => s.roomSession)
 
   const level = levelForXp(xp)
   const isLocationUnlocked = (id: LocationId) =>
@@ -56,6 +58,10 @@ export default function WorldMap() {
   function handleNodeClick(id: LocationId) {
     if (walking) return
     if (id === currentLocationId) {
+      if (isMissionTarget(id) && mission?.room && !roomSession) {
+        enterRoom(mission.id)
+        return
+      }
       if (INFO_LOCATIONS.includes(id) && !isMissionTarget(id)) setInfoLocation(id)
       return
     }
