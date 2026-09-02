@@ -1,0 +1,5 @@
+node_modules/
+gradevault.db
+gradevault.db-shm
+gradevault.db-wal
+.env
