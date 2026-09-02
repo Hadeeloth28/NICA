@@ -1,7 +1,7 @@
 {
-  "name": "nica-server",
+  "name": "gradevault-server",
   "version": "1.0.0",
-  "description": "Backend API for NICA - the assignment tracker & rewards app",
+  "description": "Backend API for GradeVault - the assignment tracker & rewards app",
   "type": "commonjs",
   "main": "src/index.js",
   "scripts": {

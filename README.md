@@ -1,4 +1,4 @@
-# NICA
+# GradeVault
 
 A fun, rewards-driven app for tracking school assignments and marks. Kids log
 their own assignments; a parent approves each one. A mark above the family's
@@ -40,8 +40,8 @@ npm install
 npm start
 ```
 
-Starts on `http://localhost:4000` and creates a local SQLite file (`nica.db`)
-on first run — no external database needed.
+Starts on `http://localhost:4000` and creates a local SQLite file
+(`gradevault.db`) on first run — no external database needed.
 
 ### 2. App
 

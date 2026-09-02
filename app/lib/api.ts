@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-// Where the NICA backend lives. `localhost` works for web and for iOS
+// Where the GradeVault backend lives. `localhost` works for web and for iOS
 // simulators; a physical phone on Expo Go needs your computer's LAN IP
 // instead (e.g. "http://192.168.1.23:4000") since "localhost" on the phone
 // means the phone itself. See the README for how to set this.

@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "NICA",
-    "slug": "nica",
-    "scheme": "nica",
+    "name": "GradeVault",
+    "slug": "gradevault",
+    "scheme": "gradevault",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.nica.app"
+      "bundleIdentifier": "com.gradevault.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -20,7 +20,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.nica.app"
+      "package": "com.gradevault.app"
     },
     "web": {
       "favicon": "./assets/favicon.png",

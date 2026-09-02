@@ -1,5 +1,5 @@
 node_modules/
-nica.db
-nica.db-shm
-nica.db-wal
+gradevault.db
+gradevault.db-shm
+gradevault.db-wal
 .env

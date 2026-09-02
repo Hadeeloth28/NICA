@@ -11,7 +11,7 @@ export default function Welcome() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.hero}>
           <Text style={styles.emoji}>🏆</Text>
-          <Text style={styles.title}>NICA</Text>
+          <Text style={styles.title}>GradeVault</Text>
           <Text style={styles.subtitle}>Crush your grades.{'\n'}Cash in your points.</Text>
         </View>
 
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, justifyContent: 'space-between', paddingHorizontal: 28, paddingBottom: 24 },
   hero: { alignItems: 'center', marginTop: '20%' },
   emoji: { fontSize: 72 },
-  title: { fontSize: 48, fontWeight: '900', color: '#fff', letterSpacing: 4, marginTop: 8 },
+  title: { fontSize: 38, fontWeight: '900', color: '#fff', letterSpacing: 1, marginTop: 8 },
   subtitle: { fontSize: 18, fontWeight: '600', color: 'rgba(255,255,255,0.9)', textAlign: 'center', marginTop: 12, lineHeight: 26 },
   actions: { gap: 0 },
   gap: { marginTop: 14 },
